@@ -1,0 +1,70 @@
+% fsp = face-related factor of C latency in easy tasks
+% facc = face-related factor of C latency in difficult tasks 
+
+%% Preparing data & preprocessing of data
+clear all; clc;
+
+% add eeglab path 
+cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project % change directory
+addpath(genpath('\\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project')) % add directory with all subfolders to the path
+eeglabpath = fileparts(which('eeglab.m')); % create variable storing a path to eeglab toolbox
+eeglab;
+
+% DEFINE FOLDERS
+
+path_facedata = 'Y:\face'; % where face data is located
+path_housedata = 'Y:\house'; % where house data is located
+mainpath = 'Y:\Rosina'; % main path
+path_preprocessed = [mainpath, '\PreprocessedData']; % where pre-processed data is saved
+
+% CREATE INDIVIDUAL FOLDERS FOR FORKING PATHS
+
+% Create individual folders where data processed with -100 ms baseline is to be saved:
+cd(path_preprocessed)
+mkdir('average_reference');
+mkdir('mastoid_reference');
+mkdir('REST_reference');
+mkdir('fourth_reference');
+mkdir('fifth_reference');
+
+% Create  list of files
+cd(path_facedata)
+files_face = dir('**/*.set');
+
+cd(path_housedata)
+files_house = dir('**/*.set');
+%% create loop to load all data files
+for eeg_file = 1:length(files_face)
+    
+    cd(eeglabpath); 
+    close all; clc; 
+    eeglab; % start eeglab (and restart it after every iteration of the loop)
+
+    % Import data:
+    EEG = pop_loadset(files_face(eeg_file).name);
+    EEG2 = EEG;
+    EEG3 = EEG;
+    EEG4 = EEG;
+    EEG5 = EEG;
+
+    % save data in average_reference folder, because at the moment common-average is reference 
+    EEG = pop_editset(EEG, 'setname', sprintf('CAR_%s',EEG.setname));
+    EEG = pop_saveset(EEG, 'filename', EEG.setname, 'filepath', 'Y:\Rosina\PreprocessedData\average_reference\');
+
+    % re-reference to linked mastoid & save
+    % do I need to interpolate?? A1 & A2 wont be relevant for analysis
+    EEG2 = pop_reref(EEG2, { 'A1' 'A2' }) %A1 and A2 are mastoids
+    EEG2 = pop_editset(EEG2, 'setname', sprintf('LM_%s',EEG2.setname));
+    EEG2 = pop_saveset(EEG2, 'filename', EEG2.setname, 'filepath', 'Y:\Rosina\PreprocessedData\mastoid_reference\');
+
+    % re-reference to REST reference & save
+    % download REST extension for eeglab
+    pop_REST_reref()
+    EEG3 = pop_editset(EEG3, 'setname', sprintf('REST_%s',EEG3.setname));
+    EEG3 = pop_saveset(EEG3, 'filename', EEG3.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
+    
+    % re-reference to 4th reference & save
+
+    % re-reference to 5th reference & save
+
+end
