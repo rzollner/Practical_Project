@@ -24,8 +24,8 @@ cd(path_preprocessed)
 mkdir('average_reference');
 mkdir('mastoid_reference');
 mkdir('REST_reference');
-mkdir('fourth_reference');
-mkdir('fifth_reference');
+mkdir('cdf_reference');
+
 
 % Create  list of files
 cd(path_facedata)
@@ -33,7 +33,7 @@ files_face = dir('**/*.set');
 
 cd(path_housedata)
 files_house = dir('**/*.set');
-%% create loop to load all data files
+%% offline rereference preprocessed data to 4 different reference schemes
 for eeg_file = 1:length(files_face)
     
     cd(eeglabpath); 
@@ -45,26 +45,71 @@ for eeg_file = 1:length(files_face)
     EEG2 = EEG;
     EEG3 = EEG;
     EEG4 = EEG;
-    EEG5 = EEG;
 
     % save data in average_reference folder, because at the moment common-average is reference 
     EEG = pop_editset(EEG, 'setname', sprintf('CAR_%s',EEG.setname));
     EEG = pop_saveset(EEG, 'filename', EEG.setname, 'filepath', 'Y:\Rosina\PreprocessedData\average_reference\');
 
     % re-reference to linked mastoid & save
-    % do I need to interpolate?? A1 & A2 wont be relevant for analysis
-    EEG2 = pop_reref(EEG2, { 'A1' 'A2' }) %A1 and A2 are mastoids
+    % do I need to interpolate?? A1 & A2 wont be relevant for analysis-->no
+    EEG2 = pop_reref(EEG2, [40 41]) %A1 and A2 are mastoids
     EEG2 = pop_editset(EEG2, 'setname', sprintf('LM_%s',EEG2.setname));
     EEG2 = pop_saveset(EEG2, 'filename', EEG2.setname, 'filepath', 'Y:\Rosina\PreprocessedData\mastoid_reference\');
 
     % re-reference to REST reference & save
     % download REST extension for eeglab
-    pop_REST_reref()
+    % https://www.neuro.uestc.edu.cn/name/shopwap/do/index/content/96
+    %pop_REST_reref(EEG3)
+    % oder rest_reref() 
+    EEG3=ref_infinity(EEG3)
     EEG3 = pop_editset(EEG3, 'setname', sprintf('REST_%s',EEG3.setname));
     EEG3 = pop_saveset(EEG3, 'filename', EEG3.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
     
-    % re-reference to 4th reference & save
+    
 
-    % re-reference to 5th reference & save
+    % re-reference to current source density
+    % https://psychophysiology.cpmc.columbia.edu/software/CSDtoolbox/tutorial.html
+    % https://www.frontiersin.org/articles/10.3389/fnins.2021.660449/full#footnote3
+    % https://osf.io/m4vfu
+    %MikeCohen writes in his book that a minimum of 64 electrodes should be
+    %there???
+    cd Y:\Rosina
+	EEG4.data=laplacian_perrinX(EEG4.data, [EEG4.chanlocs.X],[EEG4.chanlocs.Y],[EEG4.chanlocs.Z]);
+    EEG4.ref = 'CSD';
 
 end
+
+%% Tryout if rereferencing yielded in a difference in plotting
+x=[-200:1999];
+figure;
+hold on;
+for i=1:34
+plot(x, EEG.data(2,:,i), 'r')
+end
+for i=1:34
+plot(x, EEG2.data(2,:,i), 'b')
+end
+for i=1:34
+plot(x, EEG3.data(2,:,i), 'g')
+end
+for i=1:34
+plot(x, EEG4.data(2,:,i), 'y')
+end
+%% Second multiverse step: 4 electrode groups
+% (1) Cz, CPz,Pz; (2) Pz, Fz, Cz; (3) Cz; (4 )Pz
+
+average_path ='Y:\Rosina\PreprocessedData\average_reference';
+cdf_path = 'Y:\Rosina\PreprocessedData\cdf_reference';
+mastoid_path ='Y:\Rosina\PreprocessedData\mastoid_reference';
+REST_path = 'Y:\Rosina\PreprocessedData\REST_reference';
+folders = {average_path; cdf_path; mastoid_path; REST_path}
+for i = 1 : 4
+    for j = 1:4
+    foldername = fullfile(folders{i}, sprintf('elec_group_%d', j));
+    mkdir(foldername)
+    end
+end
+
+% go to folder
+% select electrodes
+% save data
