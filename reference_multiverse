@@ -24,7 +24,7 @@ cd(path_preprocessed)
 mkdir('average_reference');
 mkdir('mastoid_reference');
 mkdir('REST_reference');
-mkdir('cdf_reference');
+mkdir('CSD_reference');
 
 
 % Create  list of files
@@ -32,7 +32,7 @@ cd(path_facedata)
 files_face = dir('**/*.set');
 
 cd(path_housedata)
-files_house = dir('**/*.set');
+files_house = dir('**/*.set'); %% DONT FORGET HOUSE DATA
 %% offline rereference preprocessed data to 4 different reference schemes
 for eeg_file = 1:length(files_face)
     
@@ -61,7 +61,8 @@ for eeg_file = 1:length(files_face)
     % https://www.neuro.uestc.edu.cn/name/shopwap/do/index/content/96
     %pop_REST_reref(EEG3)
     % oder rest_reref() 
-    EEG3=ref_infinity(EEG3)
+    EEG3=ref_infinity(EEG3);
+    EEG3.ref = 'REST';
     EEG3 = pop_editset(EEG3, 'setname', sprintf('REST_%s',EEG3.setname));
     EEG3 = pop_saveset(EEG3, 'filename', EEG3.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
     
@@ -76,6 +77,9 @@ for eeg_file = 1:length(files_face)
     cd Y:\Rosina
 	EEG4.data=laplacian_perrinX(EEG4.data, [EEG4.chanlocs.X],[EEG4.chanlocs.Y],[EEG4.chanlocs.Z]);
     EEG4.ref = 'CSD';
+    EEG4 = pop_editset(EEG4, 'setname', sprintf('CSD_%s',EEG4.setname));
+    EEG4 = pop_saveset(EEG4, 'filename', EEG4.setname, 'filepath', 'Y:\Rosina\PreprocessedData\CSD_reference\');
+    
 
 end
 
@@ -95,14 +99,24 @@ end
 for i=1:34
 plot(x, EEG4.data(2,:,i), 'y')
 end
-%% Second multiverse step: 4 electrode groups
+%% Preparation for Second multiverse step: 4 electrode groups
 % (1) Cz, CPz,Pz; (2) Pz, Fz, Cz; (3) Cz; (4 )Pz
+channels_group1 = [18, 28];
+channels_group2 = [8, 18, 28];
+channels_group3 = 18;
+channels_group4 = 28; 
+channels = {channels_group1, channels_group2, channels_group3, channels_group4};
 
+% save all 4 different EEG files in one cell
+allEEG={EEG;EEG2; EEG3;EEG4}
+
+%create in each reference folder 4 different folders for each electrode group that we want to investigate 
 average_path ='Y:\Rosina\PreprocessedData\average_reference';
 cdf_path = 'Y:\Rosina\PreprocessedData\cdf_reference';
 mastoid_path ='Y:\Rosina\PreprocessedData\mastoid_reference';
 REST_path = 'Y:\Rosina\PreprocessedData\REST_reference';
 folders = {average_path; cdf_path; mastoid_path; REST_path}
+% loop to create folders
 for i = 1 : 4
     for j = 1:4
     foldername = fullfile(folders{i}, sprintf('elec_group_%d', j));
@@ -110,6 +124,17 @@ for i = 1 : 4
     end
 end
 
-% go to folder
-% select electrodes
-% save data
+%% 2nd Multiverse step: Select certain electrodes (see above)
+% loop to run through all folders and subfolders
+for i = 1:4 %folders refernce method
+    for j=1:4 % subfolders electrode groups
+    % go to each subfolder
+    cd(fullfile(folders{i}, sprintf('elec_group_%d', j)));
+    EEG_temp=allEEG{i}; % create temporary EEG
+    EEG_temp.data = allEEG{i}.data(channels{j},:,:); % select channels of interes
+    EEG_temp = pop_editset(EEG_temp, 'setname', [sprintf('elec_group_%d_', j), EEG_temp.setname]); %edit setname
+    EEG_temp = pop_saveset(EEG_temp, 'filename', EEG_temp.setname, 'filepath', fullfile(folders{i}, sprintf('elec_group_%d', j))); % save with new name
+    
+    end
+end
+
