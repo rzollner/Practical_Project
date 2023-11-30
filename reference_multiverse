@@ -45,10 +45,10 @@ channels = {channels_group1, channels_group2, channels_group3, channels_group4};
 
 
 %create in each reference folder 4 different folders for each electrode group that we want to investigate 
-average_path ='Y:\Rosina\PreprocessedData\average_reference';
-csd_path = 'Y:\Rosina\PreprocessedData\CSD_reference';
-mastoid_path ='Y:\Rosina\PreprocessedData\mastoid_reference';
-REST_path = 'Y:\Rosina\PreprocessedData\REST_reference';
+average_path = fullfile(path_preprocessed, 'average_reference');
+csd_path = fullfile(path_preprocessed, 'CSD_reference');
+mastoid_path = fullfile(path_preprocessed, 'mastoid_reference');
+REST_path = fullfile(path_preprocessed, 'REST_reference');
 folders = {average_path; mastoid_path; REST_path; csd_path}
 % loop to create folders
 for i = 1 : 4
@@ -141,3 +141,4 @@ end
 % for i=1:34
 % plot(x, EEG4.data(2,:,i), 'y')
 % end
+
