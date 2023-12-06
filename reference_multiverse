@@ -34,6 +34,7 @@ files_face = dir('**/*.set');
 cd(path_housedata)
 files_house = dir('**/*.set'); %% DONT FORGET HOUSE DATA
 
+files = [files_face; files_house];
 
 % Preparation for Second multiverse step: 4 electrode groups
 % (1) Cz, CPz,Pz; (2) Pz, Fz, Cz; (3) Cz; (4 )Pz
@@ -61,7 +62,7 @@ end
 
 %% Multiverse pipeline for 4 different reference methods and 4 different groups of electrodes
 % offline rereference preprocessed data to 4 different reference schemes
-for eeg_file = 1%:length(files_face)
+for eeg_file = 1:length(files)
     
     cd(eeglabpath); 
     close all; clc; 
@@ -106,8 +107,8 @@ for eeg_file = 1%:length(files_face)
     allEEG{3}.chanlocs = allEEG{3}.chanlocs(1:39);
     allEEG{3}.nbchan=39;
     allEEG{3} = ref_infinity(allEEG{3});
+    allEEG{3} = pop_editset(allEEG{3}, 'setname', sprintf('REST_%s',allEEG{3}.setname)); 
     allEEG{3}.ref = 'REST';
-    allEEG{3} = pop_editset(allEEG{3}, 'setname', sprintf('REST_%s',allEEG{3}.setname));
     %allEEG{3} = pop_saveset(allEEG{3}, 'filename', allEEG{3}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
     
     
@@ -120,8 +121,8 @@ for eeg_file = 1%:length(files_face)
     %there???
     cd Y:\Rosina
 	allEEG{4}.data=laplacian_perrinX(allEEG{4}.data, [allEEG{4}.chanlocs.X],[allEEG{4}.chanlocs.Y],[allEEG{4}.chanlocs.Z]);
-    allEEG{4}.ref = 'CSD';
     allEEG{4} = pop_editset(allEEG{4}, 'setname', sprintf('CSD_%s',allEEG{4}.setname));
+    allEEG{4}.ref = 'CSD';
     %allEEG{4} = pop_saveset(allEEG{4}, 'filename', allEEG{4}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\CSD_reference\');
     
 
@@ -132,7 +133,7 @@ for eeg_file = 1%:length(files_face)
         % go to each subfolder
         cd(fullfile(folders{i}, sprintf('elec_group_%d', j)));
         EEG_temp=allEEG{i}; % create temporary EEG
-        EEG_temp.data = allEEG{i}.data(channels{j},:,:); % select channels of interes
+        EEG_temp.data = allEEG{i}.data(channels{j},:,:); % select channels of interest
         EEG_temp = pop_editset(EEG_temp, 'setname', [sprintf('elec_group_%d_', j), EEG_temp.setname]); %edit setname
         EEG_temp = pop_saveset(EEG_temp, 'filename', EEG_temp.setname, 'filepath', fullfile(folders{i}, sprintf('elec_group_%d', j))); % save with new name
         end
@@ -158,5 +159,6 @@ end
 % end
 % 
 % 
+
 
 
