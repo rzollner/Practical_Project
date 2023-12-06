@@ -19,7 +19,7 @@ path_preprocessed = [mainpath, '\PreprocessedData']; % where pre-processed data 
 
 % CREATE INDIVIDUAL FOLDERS FOR FORKING PATHS
 
-% Create individual folders where data processed with -100 ms baseline is to be saved:
+% Create individual folders
 cd(path_preprocessed)
 mkdir('average_reference');
 mkdir('mastoid_reference');
@@ -69,6 +69,18 @@ for eeg_file = 1%:length(files_face)
 
     % Import data:
     EEG = pop_loadset(files_face(eeg_file).name);
+
+    % Caluclate reaction times for each participant
+    j=0; %counter
+    for i=1:length(EEG.event)
+        if EEG.event(i).type == 'S251'  | EEG.event(i).type == 'S254'
+            rt = EEG.event(i).latency-EEG.event(i-1).latency;
+            j = j+1;
+            EEG.reaction_time(j)=rt;
+        end
+    end
+
+    % create dummy variables
     EEG2 = EEG;
     EEG3 = EEG;
     EEG4 = EEG;
@@ -77,23 +89,26 @@ for eeg_file = 1%:length(files_face)
 
     % save data in average_reference folder, because at the moment common-average is reference 
     allEEG{1} = pop_editset(allEEG{1}, 'setname', sprintf('CAR_%s',allEEG{1}.setname));
-    allEEG{1} = pop_saveset(allEEG{1}, 'filename', allEEG{1}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\average_reference\');
+    %allEEG{1} = pop_saveset(allEEG{1}, 'filename', allEEG{1}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\average_reference\');
 
     % re-reference to linked mastoid & save
     % do I need to interpolate?? A1 & A2 wont be relevant for analysis-->no
     allEEG{2} = pop_reref(allEEG{2}, [40 41]) %A1 and A2 are mastoids
     allEEG{2} = pop_editset(allEEG{2}, 'setname', sprintf('LM_%s',allEEG{2}.setname));
-    allEEG{2} = pop_saveset(allEEG{2}, 'filename', allEEG{2}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\mastoid_reference\');
+    %allEEG{2} = pop_saveset(allEEG{2}, 'filename', allEEG{2}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\mastoid_reference\');
 
     % re-reference to REST reference & save
     % download REST extension for eeglab
     % https://www.neuro.uestc.edu.cn/name/shopwap/do/index/content/96
     %pop_REST_reref(EEG3)
-    % oder rest_reref() 
-    allEEG{3}=ref_infinity(allEEG{3});
+    % oder rest_reref()
+    allEEG{3}.data = allEEG{3}.data(1:39,:,:);%exclude auxillary electrodes for rest
+    allEEG{3}.chanlocs = allEEG{3}.chanlocs(1:39);
+    allEEG{3}.nbchan=39;
+    allEEG{3} = ref_infinity(allEEG{3});
     allEEG{3}.ref = 'REST';
     allEEG{3} = pop_editset(allEEG{3}, 'setname', sprintf('REST_%s',allEEG{3}.setname));
-    allEEG{3} = pop_saveset(allEEG{3}, 'filename', allEEG{3}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
+    %allEEG{3} = pop_saveset(allEEG{3}, 'filename', allEEG{3}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
     
     
 
@@ -107,7 +122,7 @@ for eeg_file = 1%:length(files_face)
 	allEEG{4}.data=laplacian_perrinX(allEEG{4}.data, [allEEG{4}.chanlocs.X],[allEEG{4}.chanlocs.Y],[allEEG{4}.chanlocs.Z]);
     allEEG{4}.ref = 'CSD';
     allEEG{4} = pop_editset(allEEG{4}, 'setname', sprintf('CSD_%s',allEEG{4}.setname));
-    allEEG{4} = pop_saveset(allEEG{4}, 'filename', allEEG{4}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\CSD_reference\');
+    %allEEG{4} = pop_saveset(allEEG{4}, 'filename', allEEG{4}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\CSD_reference\');
     
 
     % 2nd Multiverse step: Select certain electrodes (see above)
@@ -130,15 +145,18 @@ end
 % figure;
 % hold on;
 % for i=1:34
-% plot(x, EEG.data(2,:,i), 'r')
+% plot(x, allEEG{4}.data(2,:,i), 'y')
 % end
 % for i=1:34
-% plot(x, EEG2.data(2,:,i), 'b')
+% plot(x, allEEG{3}.data(2,:,i), 'g')
 % end
 % for i=1:34
-% plot(x, EEG3.data(2,:,i), 'g')
+% plot(x, allEEG{1}.data(2,:,i), 'r')
 % end
 % for i=1:34
-% plot(x, EEG4.data(2,:,i), 'y')
+% plot(x, allEEG{2}.data(2,:,i), 'b')
 % end
+% 
+% 
+
 
