@@ -24,13 +24,13 @@ latency_m = []; %latencies to be estimated
 for i = 1:length(files) % put in files
 
     %load data
-    EEG = pop_loadset(files(i));
+    EEG = pop_loadset(files(i).name, files(i).folder);
 
 
     % reshape to time, electrode, trial
     EEG_temp = permute(EEG.data, [2,1,3]);
     cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Downloads\latency_estimation\latency_estimation
-        for j = 1:34 %trial_num
+        for j = 1:size(EEG_temp, 3) %trial_number 
             if contains(EEG.setname, 'elec_group_1' ) | contains(EEG.setname, 'elec_group_2' )
                 EEG_temp = mean(EEG_temp, 2); %take mean of channels
                 temp = filtering(EEG_temp(:,1,j),0,3);
@@ -80,19 +80,27 @@ plot(x, mean_EEG(:,:,1))
 %  cover the entire ERP (e.g., from −200 ms to 1200 ms after stimulus
 %  onset). The electrodes that pick up no or only weak ERPs such as VEOU,
 %  VEOL, ECG, should be discarded.       
+for i = length(files)
+    
+    EEG = pop_loadset(files(i).name, files(i).folder);
+    % reshape to time, electrode, trial
+    EEG_temp = permute(EEG.data, [2,1,3]);
+    if contains(EEG.setname, 'elec_group_1' ) | contains(EEG.setname, 'elec_group_2' )
+                EEG_temp = mean(EEG_temp, 2); %take mean of channels
+    end
+    cfg = []; %initialization;
 
-cfg = []; %initialization;
+    cfg.samp_interval = 1; %1/sampling rate in ms
 
-cfg.samp_interval = 1; %1/sampling rate in ms
+    cfg.epoch_twd = [-200, 2000];
+    
+    cfg.comp.name = {'s','c','r'};
 
-cfg.epoch_twd = [-200, 2000];
+    cfg.comp.twd = {[0, 800], [100, 1200], [-400, 400]}; %same as it is in Hadis COMT RIDE paper
 
-cfg.comp.name = {'s','c','r'};
+    cfg.comp.latency = {zeros(size(EEG.data,3),1),'unknown',EEG.reaction_time'};
 
-cfg.comp.twd = {[0, 800], [100, 1200], [-400, 400]}; %same as it is in Hadis COMT RIDE paper
+    cfg = RIDE_cfg(cfg);
 
-cfg.comp.latency = {zeros(size(EEG.data,3),1),'unknown',EEG.reaction_time'};
-
-cfg = RIDE_cfg(cfg);
-
-results = RIDE_call(EEG.data,cfg);
+    results = RIDE_call(EEG_temp,cfg);
+end
