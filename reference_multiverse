@@ -62,14 +62,14 @@ end
 
 %% Multiverse pipeline for 4 different reference methods and 4 different groups of electrodes
 % offline rereference preprocessed data to 4 different reference schemes
-for eeg_file = 1:length(files)
+for eeg_file = 1%:length(files)
     
     cd(eeglabpath); 
     close all; clc; 
     eeglab; % start eeglab (and restart it after every iteration of the loop)
 
     % Import data:
-    EEG = pop_loadset(files_face(eeg_file).name);
+    EEG = pop_loadset(files(eeg_file).name);
 
     % Caluclate reaction times for each participant
     j=0; %counter
@@ -85,6 +85,7 @@ for eeg_file = 1:length(files)
     EEG2 = EEG;
     EEG3 = EEG;
     EEG4 = EEG;
+
     % save all 4 different EEG files in one cell
     allEEG={EEG; EEG2; EEG3; EEG4};
 
@@ -107,8 +108,7 @@ for eeg_file = 1:length(files)
     allEEG{3}.chanlocs = allEEG{3}.chanlocs(1:39);
     allEEG{3}.nbchan=39;
     allEEG{3} = ref_infinity(allEEG{3});
-    allEEG{3} = pop_editset(allEEG{3}, 'setname', sprintf('REST_%s',allEEG{3}.setname)); 
-    allEEG{3}.ref = 'REST';
+    allEEG{3} = pop_editset(allEEG{3}, 'setname', sprintf('REST_%s',allEEG{3}.setname));
     %allEEG{3} = pop_saveset(allEEG{3}, 'filename', allEEG{3}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
     
     
@@ -122,7 +122,6 @@ for eeg_file = 1:length(files)
     cd Y:\Rosina
 	allEEG{4}.data=laplacian_perrinX(allEEG{4}.data, [allEEG{4}.chanlocs.X],[allEEG{4}.chanlocs.Y],[allEEG{4}.chanlocs.Z]);
     allEEG{4} = pop_editset(allEEG{4}, 'setname', sprintf('CSD_%s',allEEG{4}.setname));
-    allEEG{4}.ref = 'CSD';
     %allEEG{4} = pop_saveset(allEEG{4}, 'filename', allEEG{4}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\CSD_reference\');
     
 
@@ -159,6 +158,5 @@ end
 % end
 % 
 % 
-
 
 
