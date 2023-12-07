@@ -1,0 +1,98 @@
+%% Analysis for practical project
+
+
+% Prepartion
+
+clear all; clc;
+
+% add eeglab path 
+cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project % change directory
+addpath(genpath('\\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project')) % add directory with all subfolders to the path
+eeglabpath = fileparts(which('eeglab.m')); % create variable storing a path to eeglab toolbox
+eeglab;
+
+
+cd 'Y:\Rosina\PreprocessedData'
+files = dir('**/*/*.set')
+
+%ch_pz = find(strcmpi({EEG.chanlocs.labels},'pz'));
+
+%% filtering and peak-picking 3 Hz
+
+latency_m = []; %latencies to be estimated
+
+for i = 1:length(files) % put in files
+
+    %load data
+    EEG = pop_loadset(files(i));
+
+
+    % reshape to time, electrode, trial
+    EEG_temp = permute(EEG.data, [2,1,3]);
+    cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Downloads\latency_estimation\latency_estimation
+        for j = 1:34 %trial_num
+            if contains(EEG.setname, 'elec_group_1' ) | contains(EEG.setname, 'elec_group_2' )
+                EEG_temp = mean(EEG_temp, 2); %take mean of channels
+                temp = filtering(EEG_temp(:,1,j),0,3);
+                % filtering function is taken from NBR paper 2017 by Guang
+                % et al.
+                latency_m(1,j) = find_peak(temp);
+            else
+                temp = filtering(EEG_temp(:,1,j),0,3);
+                % filtering function and find_peak() is taken from NBR paper 2017 by Guang
+                % et al.
+                latency_m(1,j) = find_peak(temp);
+            end
+
+        end
+        latency_m = round(latency_m-mean(latency_m));% center the latency
+        figure;plot(latency_m,'.');% compare the estimated and true latency
+        EEG.reaction_time(2,:)=latency_m; % save latency within EEG structure
+        
+end
+
+
+
+
+
+
+
+x=[-200:1999]
+plot(x, EEG.data(:,:,1))
+hold on;
+plot(x, mean_EEG(:,:,1))
+
+
+%% RIDE
+%https://www.sciencedirect.com/science/article/pii/S0165027014003690
+%  The RIDE toolbox requires that single trial ERP data are segmented and
+%  prepared as 3D matrix (time × electrode × trial). The data matrix should
+%  be exported from commercial ERP softwares and can be converted to a
+%  Matlab matrix by EEGLAB (Delorme and Makeig, 2004). The toolbox of RIDE
+%  can be applied independently of other toolboxes once the single trial
+%  ERP data is prepared as simple matrix in the workspace of Matlab.
+%  Nevertheless, EEGLAB has developed very mature functions of exporting
+%  data from commercial softwares into Matlab. Each data set that is to be
+%  fed into the RIDE toolbox should be only from a single condition of a
+%  single participant. The data should be processed after proper artifact
+%  rejection. Insufficient artifact rejection might lead to unexpected
+%  results (see Discussion). The segmented data should be baselined and
+%  cover the entire ERP (e.g., from −200 ms to 1200 ms after stimulus
+%  onset). The electrodes that pick up no or only weak ERPs such as VEOU,
+%  VEOL, ECG, should be discarded.       
+
+cfg = []; %initialization;
+
+cfg.samp_interval = 1; %1/sampling rate in ms
+
+cfg.epoch_twd = [-200, 2000];
+
+cfg.comp.name = {'s','c','r'};
+
+cfg.comp.twd = {[0, 800], [100, 1200], [-400, 400]}; %same as it is in Hadis COMT RIDE paper
+
+cfg.comp.latency = {zeros(size(EEG.data,3),1),'unknown',EEG.reaction_time'};
+
+cfg = RIDE_cfg(cfg);
+
+results = RIDE_call(EEG.data,cfg);
