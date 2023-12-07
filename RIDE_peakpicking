@@ -17,10 +17,14 @@ files = dir('**/*/*.set')
 
 %ch_pz = find(strcmpi({EEG.chanlocs.labels},'pz'));
 
+% create spreadsheet to save data in:
+%T ={'Ptcpt_number','Stim_type','Difficulty','Condition','Reference', 'elec_group', 'single_trial_algorithm', 'trial_num', 'latency', 'rt'};
+
+
 %% filtering and peak-picking 3 Hz
 
 latency_m = []; %latencies to be estimated
-
+final_csv = [];
 for i = 1:length(files) % put in files
 
     %load data
@@ -46,21 +50,33 @@ for i = 1:length(files) % put in files
 
         end
         latency_m = round(latency_m-mean(latency_m));% center the latency
-        figure;plot(latency_m,'.');% compare the estimated and true latency
-        EEG.reaction_time(2,:)=latency_m; % save latency within EEG structure
+        %figure;plot(latency_m,'.');% compare the estimated and true latency
+        EEG.peak_picking=latency_m; % save latency within EEG structure
         
+        % create small spreadsheet for each EEG file
+        trial_num = (1:size(EEG_temp,3))';
+        Ptcpt_num = cell(size(EEG_temp,3),1);
+        Ptcpt_num(:) = {EEG.subject};
+        single_trial_algorithm = cell(size(EEG_temp,3),1);
+        single_trial_algorithm(:)= {'peakpicking'};
+        electrode_groups = cell(size(EEG_temp,3),1);
+        electrode_groups(:) = {EEG.elec_group};
+        reference = cell(size(EEG_temp,3),1);
+        reference(:) = {EEG.reference};
+        conditions = cell(size(EEG_temp,3),1);
+        conditions(:) = {EEG.condition};
+        difficulty = cell(size(EEG_temp,3),1);
+        difficulty(:) = {EEG.difficulty};
+        stimulus = cell(size(EEG_temp,3),1);
+        stimulus(:) = {EEG.stimulus};
+        latency = EEG.peak_picking';
+        reaction_time = EEG.reaction_time';
+
+        tab = table(Ptcpt_num, stimulus, difficulty, conditions, reference, electrode_groups, single_trial_algorithm, trial_num, latency, reaction_time);
+        final_csv = [final_csv; tab];
 end
 
 
-
-
-
-
-
-x=[-200:1999]
-plot(x, EEG.data(:,:,1))
-hold on;
-plot(x, mean_EEG(:,:,1))
 
 
 %% RIDE
@@ -79,8 +95,9 @@ plot(x, mean_EEG(:,:,1))
 %  results (see Discussion). The segmented data should be baselined and
 %  cover the entire ERP (e.g., from −200 ms to 1200 ms after stimulus
 %  onset). The electrodes that pick up no or only weak ERPs such as VEOU,
-%  VEOL, ECG, should be discarded.       
-for i = length(files)
+%  VEOL, ECG, should be discarded.  
+
+for i = 1:length(files)
     
     EEG = pop_loadset(files(i).name, files(i).folder);
     % reshape to time, electrode, trial
@@ -103,4 +120,32 @@ for i = length(files)
     cfg = RIDE_cfg(cfg);
 
     results = RIDE_call(EEG_temp,cfg);
+    EEG.results_RIDE = results;
+
+        % create small spreadsheet for each EEG file
+        trial_num = (1:size(EEG_temp,3))';
+        Ptcpt_num = cell(size(EEG_temp,3),1);
+        Ptcpt_num(:) = {EEG.subject};
+        single_trial_algorithm = cell(size(EEG_temp,3),1);
+        single_trial_algorithm(:)= {'RIDE'};
+        electrode_groups = cell(size(EEG_temp,3),1);
+        electrode_groups(:) = {EEG.elec_group};
+        reference = cell(size(EEG_temp,3),1);
+        reference(:) = {EEG.reference};
+        conditions = cell(size(EEG_temp,3),1);
+        conditions(:) = {EEG.condition};
+        difficulty = cell(size(EEG_temp,3),1);
+        difficulty(:) = {EEG.difficulty};
+        stimulus = cell(size(EEG_temp,3),1);
+        stimulus(:) = {EEG.stimulus};
+        latency = results.latency_c;
+        reaction_time = EEG.reaction_time';
+    
+    tab = table(Ptcpt_num, stimulus, difficulty, conditions, reference, electrode_groups, single_trial_algorithm, trial_num, latency, reaction_time);
+    final_csv = [final_csv; tab];
+
 end
+
+
+
+
