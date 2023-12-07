@@ -81,6 +81,26 @@ for eeg_file = 1%:length(files)
         end
     end
 
+
+    % Add information to EEG structure
+    EEG.subject = EEG.filename(1:6);
+    EEG.stimulus = EEG.filename(8);
+    if EEG.filename(9)=='a'
+        EEG.difficulty = 'difficult';
+    elseif EEG.filename(9)=='s'
+        EEG.difficulty = 'easy';
+    end
+
+    if contains(EEG.filename, 'UPUF')
+        EEG.condition = 'UPUF';
+    elseif contains(EEG.filename, 'UPF')
+        EEG.condition = 'UPF';
+    elseif contains(EEG.filename, 'PUF')
+        EEG.condition = 'PUF';
+    else
+        EEG.condition = 'PF';
+    end
+
     % create dummy variables
     EEG2 = EEG;
     EEG3 = EEG;
@@ -91,12 +111,14 @@ for eeg_file = 1%:length(files)
 
     % save data in average_reference folder, because at the moment common-average is reference 
     allEEG{1} = pop_editset(allEEG{1}, 'setname', sprintf('CAR_%s',allEEG{1}.setname));
+    allEEG{1}.reference = 'average';
     %allEEG{1} = pop_saveset(allEEG{1}, 'filename', allEEG{1}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\average_reference\');
 
     % re-reference to linked mastoid & save
     % do I need to interpolate?? A1 & A2 wont be relevant for analysis-->no
     allEEG{2} = pop_reref(allEEG{2}, [40 41]) %A1 and A2 are mastoids
     allEEG{2} = pop_editset(allEEG{2}, 'setname', sprintf('LM_%s',allEEG{2}.setname));
+    allEEG{2}.reference = 'linkedMastoids';
     %allEEG{2} = pop_saveset(allEEG{2}, 'filename', allEEG{2}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\mastoid_reference\');
 
     % re-reference to REST reference & save
@@ -109,6 +131,8 @@ for eeg_file = 1%:length(files)
     allEEG{3}.nbchan=39;
     allEEG{3} = ref_infinity(allEEG{3});
     allEEG{3} = pop_editset(allEEG{3}, 'setname', sprintf('REST_%s',allEEG{3}.setname));
+    allEEG{3}.reference = 'REST';
+
     %allEEG{3} = pop_saveset(allEEG{3}, 'filename', allEEG{3}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\REST_reference\');
     
     
@@ -122,6 +146,8 @@ for eeg_file = 1%:length(files)
     cd Y:\Rosina
 	allEEG{4}.data=laplacian_perrinX(allEEG{4}.data, [allEEG{4}.chanlocs.X],[allEEG{4}.chanlocs.Y],[allEEG{4}.chanlocs.Z]);
     allEEG{4} = pop_editset(allEEG{4}, 'setname', sprintf('CSD_%s',allEEG{4}.setname));
+    allEEG{4}.reference = 'CSD';
+
     %allEEG{4} = pop_saveset(allEEG{4}, 'filename', allEEG{4}.setname, 'filepath', 'Y:\Rosina\PreprocessedData\CSD_reference\');
     
 
@@ -133,6 +159,7 @@ for eeg_file = 1%:length(files)
         cd(fullfile(folders{i}, sprintf('elec_group_%d', j)));
         EEG_temp=allEEG{i}; % create temporary EEG
         EEG_temp.data = allEEG{i}.data(channels{j},:,:); % select channels of interest
+        EEG_temp.elec_group = sprintf('elec_group_%d_', j);
         EEG_temp = pop_editset(EEG_temp, 'setname', [sprintf('elec_group_%d_', j), EEG_temp.setname]); %edit setname
         EEG_temp = pop_saveset(EEG_temp, 'filename', EEG_temp.setname, 'filepath', fullfile(folders{i}, sprintf('elec_group_%d', j))); % save with new name
         end
@@ -158,5 +185,3 @@ end
 % end
 % 
 % 
-
-
