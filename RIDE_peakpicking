@@ -145,6 +145,8 @@ for i = 1:length(files)
     final_csv = [final_csv; tab];
 
 end
+cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project
+writetable(final_csv,'results_latency_peakpicking_RIDE.xls') 
 
 
 
