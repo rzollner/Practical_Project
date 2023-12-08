@@ -23,10 +23,10 @@ files = dir('**/*/*.set')
 
 %% filtering and peak-picking 3 Hz
 
-latency_m = []; %latencies to be estimated
+
 final_csv = [];
 for i = 1:length(files) % put in files
-
+    latency_m = []; %latencies to be estimated
     %load data
     EEG = pop_loadset(files(i).name, files(i).folder);
 
