@@ -5,17 +5,20 @@
 clear all; clc;
 
 % add eeglab path 
-cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project % change directory
-addpath(genpath('\\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project')) % add directory with all subfolders to the path
+% add eeglab path 
+cd C:\Users\zollner\Desktop\Practical_project % change directory
+addpath(genpath('C:\Users\zollner\Desktop\Practical_project')) % add directory with all subfolders to the path
 eeglabpath = fileparts(which('eeglab.m')); % create variable storing a path to eeglab toolbox
 eeglab;
 
 % DEFINE FOLDERS
 
-path_facedata = 'Y:\face'; % where face data is located
-path_housedata = 'Y:\house'; % where house data is located
-mainpath = 'Y:\Rosina'; % main path
-path_preprocessed = [mainpath, '\PreprocessedData']; % where pre-processed data is saved
+path_facedata = 'Z:\face'; % where face data is located
+addpath(genpath('Z:\face')); 
+path_housedata = 'Z:\house';% where house data is located
+addpath(genpath('Z:\house')); 
+mainpath = 'C:\Users\zollner\Desktop\Practical_project'; % main path
+path_preprocessed = 'D:\PreprocessedData'; % where pre-processed data is saved
 
 % CREATE INDIVIDUAL FOLDERS FOR FORKING PATHS
 
@@ -44,6 +47,9 @@ channels_group3 = 18;
 channels_group4 = 28; 
 channels = {channels_group1, channels_group2, channels_group3, channels_group4};
 
+% string of all different stimuli
+str = ["S 22", "S 23", "S 24", "S 25", "S 26", "S 27", "S 28", "S 29", "S 42", "S 43", "S 44", "S 45", "S 46", "S 47", "S 48", "S 49" ]
+
 
 %create in each reference folder 4 different folders for each electrode group that we want to investigate 
 average_path = fullfile(path_preprocessed, 'average_reference');
@@ -62,7 +68,7 @@ end
 
 %% Multiverse pipeline for 4 different reference methods and 4 different groups of electrodes
 % offline rereference preprocessed data to 4 different reference schemes
-for eeg_file = 1%:length(files)
+for eeg_file = 1:length(files)
     
     cd(eeglabpath); 
     close all; clc; 
@@ -70,16 +76,26 @@ for eeg_file = 1%:length(files)
 
     % Import data:
     EEG = pop_loadset(files(eeg_file).name);
-
     % Caluclate reaction times for each participant
     j=0; %counter
-    for i=1:length(EEG.event)
-        if EEG.event(i).type == 'S251'  | EEG.event(i).type == 'S254'
-            rt = EEG.event(i).latency-EEG.event(i-1).latency;
-            j = j+1;
-            EEG.reaction_time(j)=rt;
+    k=[]
+    for i=2:length(EEG.event)
+        if contains(EEG.event(i-1).type, str)==1
+            if EEG.event(i).type == 'S251'  | EEG.event(i).type == 'S254'
+                rt = EEG.event(i).latency-EEG.event(i-1).latency;
+                j = j+1;
+                EEG.reaction_time(j)=rt;
+                if size(EEG.data,3)>1
+                    k = [k, EEG.event(i).epoch];
+                end
+            end
         end
     end
+        if size(EEG.data,3)>1
+        k = unique(k);
+        EEG = pop_select(EEG, 'trial', k);
+        end
+    
 
 
     % Add information to EEG structure
@@ -143,7 +159,7 @@ for eeg_file = 1%:length(files)
     % https://osf.io/m4vfu
     %MikeCohen writes in his book that a minimum of 64 electrodes should be
     %there???
-    cd Y:\Rosina
+    cd Z:\Rosina
 	allEEG{4}.data=laplacian_perrinX(allEEG{4}.data, [allEEG{4}.chanlocs.X],[allEEG{4}.chanlocs.Y],[allEEG{4}.chanlocs.Z]);
     allEEG{4} = pop_editset(allEEG{4}, 'setname', sprintf('CSD_%s',allEEG{4}.setname));
     allEEG{4}.reference = 'CSD';
