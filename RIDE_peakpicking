@@ -6,34 +6,46 @@
 clear all; clc;
 
 % add eeglab path 
-cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project % change directory
-addpath(genpath('\\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project')) % add directory with all subfolders to the path
+cd C:\Users\zollner\Desktop\Practical_project % change directory
+addpath(genpath('C:\Users\zollner\Desktop\Practical_project')) % add directory with all subfolders to the path
 eeglabpath = fileparts(which('eeglab.m')); % create variable storing a path to eeglab toolbox
 eeglab;
 
 
-cd 'Y:\Rosina\PreprocessedData'
+cd 'D:\PreprocessedData'
 files = dir('**/*/*.set')
 
 %ch_pz = find(strcmpi({EEG.chanlocs.labels},'pz'));
 
 % create spreadsheet to save data in:
 %T ={'Ptcpt_number','Stim_type','Difficulty','Condition','Reference', 'elec_group', 'single_trial_algorithm', 'trial_num', 'latency', 'rt'};
+%% Check for datasets that are two dimensioal ie just have one epoch
+exclude = {};
+for i = 1:length(files)
+    EEG = pop_loadset(files(i).name, files(i).folder);
 
+       if size(EEG.data,3)<2
+        exclude{end+1} = EEG.subject;
+       end
+       disp(['We are now finished with: ', num2str(i)])
+end
+exclude = unique(exclude);
 
 %% filtering and peak-picking 3 Hz
 
-
 final_csv = [];
 for i = 1:length(files) % put in files
+
     latency_m = []; %latencies to be estimated
     %load data
     EEG = pop_loadset(files(i).name, files(i).folder);
+    disp(['We are now finished with: ', num2str(i) ' of ', num2str(length(files))])
 
+    if ~any(ismember(exclude,EEG.subject))
 
     % reshape to time, electrode, trial
     EEG_temp = permute(EEG.data, [2,1,3]);
-    cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Downloads\latency_estimation\latency_estimation
+    % cd 'C:\Users\zollner\Desktop\Practical_project'
         for j = 1:size(EEG_temp, 3) %trial_number 
             if contains(EEG.setname, 'elec_group_1' ) | contains(EEG.setname, 'elec_group_2' )
                 EEG_temp = mean(EEG_temp, 2); %take mean of channels
@@ -74,8 +86,9 @@ for i = 1:length(files) % put in files
 
         tab = table(Ptcpt_num, stimulus, difficulty, conditions, reference, electrode_groups, single_trial_algorithm, trial_num, latency, reaction_time);
         final_csv = [final_csv; tab];
+    end
 end
-
+writetable(final_csv,'results_latency_peakpicking.csv') 
 
 
 
@@ -96,10 +109,13 @@ end
 %  cover the entire ERP (e.g., from −200 ms to 1200 ms after stimulus
 %  onset). The electrodes that pick up no or only weak ERPs such as VEOU,
 %  VEOL, ECG, should be discarded.  
-
+final_csv=[];
 for i = 1:length(files)
-    
+    fprintf(num2str(i))
     EEG = pop_loadset(files(i).name, files(i).folder);
+
+    if ~any(ismember(exclude,EEG.subject))
+
     % reshape to time, electrode, trial
     EEG_temp = permute(EEG.data, [2,1,3]);
     if contains(EEG.setname, 'elec_group_1' ) | contains(EEG.setname, 'elec_group_2' )
@@ -143,11 +159,10 @@ for i = 1:length(files)
     
     tab = table(Ptcpt_num, stimulus, difficulty, conditions, reference, electrode_groups, single_trial_algorithm, trial_num, latency, reaction_time);
     final_csv = [final_csv; tab];
-
+    end
 end
-cd \\daten.w2kroot.uni-oldenburg.de\home\kafu3624\Desktop\Practical_Project
-writetable(final_csv,'results_latency_peakpicking_RIDE.xls') 
-
+cd 'C:\Users\zollner\Desktop\Practical_project'
+writetable(final_csv,'results_latency_RIDE.csv')
 
 
 
