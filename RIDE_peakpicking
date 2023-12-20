@@ -39,7 +39,7 @@ for i = 1:length(files) % put in files
     latency_m = []; %latencies to be estimated
     %load data
     EEG = pop_loadset(files(i).name, files(i).folder);
-    disp(['We are now finished with: ', num2str(i) ' of ', num2str(length(files))])
+    disp(['PEAKPICKING: ', num2str(i) ' of ', num2str(length(files))])
 
     if ~any(ismember(exclude,EEG.subject))
 
@@ -113,6 +113,7 @@ final_csv=[];
 for i = 1:length(files)
     fprintf(num2str(i))
     EEG = pop_loadset(files(i).name, files(i).folder);
+    disp(['RIDE process: ', num2str(i) ' of ', num2str(length(files))])
 
     if ~any(ismember(exclude,EEG.subject))
 
@@ -162,7 +163,5 @@ for i = 1:length(files)
     end
 end
 cd 'C:\Users\zollner\Desktop\Practical_project'
-writetable(final_csv,'results_latency_RIDE.csv')
-
-
+writetable(final_csv,'results_latency_RIDE.csv') 
 
