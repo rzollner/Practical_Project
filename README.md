@@ -17,3 +17,4 @@ In future, it could be interesting to include more preprocessing steps and to te
 
 
 
+![image](https://github.com/rzollner/Practical_Project/assets/64137446/7281626c-1bca-4f15-a210-e6418e6ed986)
