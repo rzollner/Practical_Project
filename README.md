@@ -5,9 +5,11 @@ Here you can find all the scripts I used for my practical project.
 Additionally, you can have a look at my poster, abstract and an additional plot of the ERPs in the 4 conditions and across the quantification decisions.
 
 Abstract:
+
 Multiverse Analysis for Transparent and Replicable Neurometric Evaluations: Theoretical Plausibility of P300 Estimates Across Single Trial EEG Algorithms and Quantification Decisions
 
 Student Name: Rosina Zollner
+
 Supervisor(s): Cassie Ann Short
 
 More than 70% of researchers who have attempted to replicate experiments conducted by other scientists have failed, a phenomenon known as the Replication Crisis. One factor contributing to this issue are the researchers’ degrees of freedom, encompassing the numerous decisions a researcher makes throughout the analysis process. Multiverse analysis is a common approach used to investigate the robustness of an effect across various defensible analysis pipelines and to report the data processing uncertainty created by the researchers’ degrees of freedom.
